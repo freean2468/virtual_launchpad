@@ -78,6 +78,14 @@ public class RootController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		System.out.println("initialized!");
+
+		try {
+			MusicPlayer mp = new MusicPlayer(this);
+			mp.go();
+		} catch (Exception ex) { 
+			ex.printStackTrace(); 
+		}
+		
 //		btn11.setOnAction(new EventHandler<ActionEvent>() {
 //			@Override
 //			public void handle(ActionEvent event) {

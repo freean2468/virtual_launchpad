@@ -5,7 +5,7 @@
  * 문의 : https://www.youtube.com/channel/UC5yZGtDDMZDe3jmCDUB_rJA
  */
 package application;
-	
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Stage;
@@ -14,6 +14,11 @@ import javafx.scene.Scene;
 
 
 public class Main extends Application {
+	@Override
+	public void init() {
+		
+	}
+	
 	@Override
 	public void start(Stage primaryStage) {
 		try {
@@ -25,6 +30,11 @@ public class Main extends Application {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	@Override
+	public void stop() throws Exception {
+		System.out.println(Thread.currentThread().getName()+": stop() 호출");
 	}
 	
 	public static void main(String[] args) {
