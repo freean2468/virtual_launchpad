@@ -8,7 +8,7 @@ Dec 21, 2020 현재 추가 개발 예정.
 ### 개발 환경
  * Eclipse v4.18 on Mac OS
  * javafx 15.0.1
- * jre 15.0.1
+ * jdk 15.0.1
  
 ### 실행 영상
 https://youtu.be/v1lvpBt2Bvw
