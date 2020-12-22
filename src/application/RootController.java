@@ -1,14 +1,17 @@
 package application;
 
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
-import java.util.TreeMap;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.Stage;
 
 public class RootController implements Initializable {
 	@FXML private Rectangle btn1;
@@ -77,6 +80,8 @@ public class RootController implements Initializable {
 	@FXML private Rectangle btn64;
 	
 	public ArrayList<Rectangle> launchpad = new ArrayList<Rectangle>(); 
+	public static Stage primaryStage = null;
+	private MusicPlayer mp = null;
 	
 	
 	@Override
@@ -149,8 +154,7 @@ public class RootController implements Initializable {
 		launchpad.add(btn64);
 
 		try {
-			MusicPlayer mp = new MusicPlayer(this);
-			mp.go();
+			mp = new MusicPlayer(this);
 		} catch (Exception ex) { 
 			ex.printStackTrace(); 
 		}
@@ -169,17 +173,33 @@ public class RootController implements Initializable {
 	
 	@FXML
 	public void handleBtn11Action() {
-		System.out.println("버튼11 클릭");
+//		System.out.println("버튼11 클릭");
 		btn1.setFill(Color.RED);
 	}
 	
+	@FXML
 	public void handleBtn12Action() {
-		System.out.println("버튼12 클릭");
+//		System.out.println("버튼12 클릭");
 	}
 	
+	@FXML
 	public void handleBtn13Action() {
-		System.out.println("버튼13 클릭");
+//		System.out.println("버튼13 클릭");
 	}
 	
+	@FXML
+	public void handleOpenFile() {
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.getExtensionFilters().add(new ExtensionFilter("Midi Files", "*.mid"));
+		fileChooser.setTitle("Open Midi File");
+		File selectedFile = fileChooser.showOpenDialog(primaryStage);
+		String selectedFilePath = selectedFile.getPath();
+		mp.go(selectedFilePath);
+	}
+	
+	@FXML
+	public void handleClose() {
+		System.out.println("Close");
+	}
 	
 }
