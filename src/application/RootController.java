@@ -7,12 +7,13 @@ import java.util.ResourceBundle;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.ComboBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.stage.Stage;
 
+// can't declare as a singleton
 public class RootController implements Initializable {
 	@FXML private Rectangle btn1;
 	@FXML private Rectangle btn2;
@@ -79,10 +80,9 @@ public class RootController implements Initializable {
 	@FXML private Rectangle btn63;
 	@FXML private Rectangle btn64;
 	
-	public ArrayList<Rectangle> launchpad = new ArrayList<Rectangle>(); 
-	public static Stage primaryStage = null;
-	private MusicPlayer mp = null;
+	@FXML private ComboBox<Integer> comboTrack;
 	
+	private ArrayList<Rectangle> launchpad = new ArrayList<Rectangle>();
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -152,12 +152,6 @@ public class RootController implements Initializable {
 		launchpad.add(btn62);
 		launchpad.add(btn63);
 		launchpad.add(btn64);
-
-		try {
-			mp = new MusicPlayer(this);
-		} catch (Exception ex) { 
-			ex.printStackTrace(); 
-		}
 		
 		// setOnActions Directly on the programming.
 //		btn11.setOnAction(new EventHandler<ActionEvent>() {
@@ -192,9 +186,9 @@ public class RootController implements Initializable {
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.getExtensionFilters().add(new ExtensionFilter("Midi Files", "*.mid"));
 		fileChooser.setTitle("Open Midi File");
-		File selectedFile = fileChooser.showOpenDialog(primaryStage);
+		File selectedFile = fileChooser.showOpenDialog(Main.stage);
 		String selectedFilePath = selectedFile.getPath();
-		mp.go(selectedFilePath);
+		MusicPlayer.getInstance().go(selectedFilePath);
 	}
 	
 	@FXML
@@ -202,4 +196,23 @@ public class RootController implements Initializable {
 		System.out.println("Close");
 	}
 	
+	@FXML
+	public void handleComboTrack() {
+		MusicPlayer.getInstance().stop();
+		if (comboTrack.getValue() != null) {
+			for (Rectangle pad : launchpad) {
+				pad.setFill(Color.WHITE);
+			}
+//			System.out.println("combo : " + comboTrack.getValue());
+			MusicPlayer.getInstance().setTrack(comboTrack.getValue());
+		}
+	}
+	
+	public ComboBox<Integer> getComboTrack() {
+		return comboTrack;
+	}
+	
+	public ArrayList<Rectangle> getLaunchpad() {
+		return launchpad;
+	}
 }

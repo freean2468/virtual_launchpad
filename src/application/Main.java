@@ -14,6 +14,9 @@ import javafx.scene.Scene;
 
 
 public class Main extends Application {
+	public static Stage stage = null;
+	public static RootController rootController = null;
+	
 	@Override
 	public void init() {
 		
@@ -22,13 +25,16 @@ public class Main extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		try {
-			Parent root = FXMLLoader.load(getClass().getResource("../root.fxml"));
+			FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("../root.fxml"));
+			Parent root = fxmlLoader.load();
+			rootController = (RootController) fxmlLoader.getController();
+			
 			Scene scene = new Scene(root);
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
-			primaryStage.setScene(scene);
-			primaryStage.setResizable(false);
-			RootController.primaryStage = primaryStage;
-			primaryStage.show();
+			stage = primaryStage;
+			stage.setScene(scene);
+			stage.setResizable(false);
+			stage.show();
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -37,6 +43,7 @@ public class Main extends Application {
 	@Override
 	public void stop() throws Exception {
 		System.out.println(Thread.currentThread().getName()+": stop() 호출");
+		MusicPlayer.getInstance().closeSequencer();
 	}
 	
 	public static void main(String[] args) {
