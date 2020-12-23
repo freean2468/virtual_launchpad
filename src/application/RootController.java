@@ -15,6 +15,9 @@ import javafx.stage.FileChooser.ExtensionFilter;
 
 // can't declare as a singleton
 public class RootController implements Initializable {
+	public static final int PAD_WIDTH = 80;
+	public static final int PAD_HEIGHT = 80;
+	
 	@FXML private Rectangle btn1;
 	@FXML private Rectangle btn2;
 	@FXML private Rectangle btn3;
@@ -80,7 +83,7 @@ public class RootController implements Initializable {
 	@FXML private Rectangle btn63;
 	@FXML private Rectangle btn64;
 	
-	@FXML private ComboBox<Integer> comboTrack;
+	@FXML private ComboBox<String> comboTrack;
 	
 	private ArrayList<Rectangle> launchpad = new ArrayList<Rectangle>();
 	
@@ -188,6 +191,7 @@ public class RootController implements Initializable {
 		fileChooser.setTitle("Open Midi File");
 		File selectedFile = fileChooser.showOpenDialog(Main.stage);
 		String selectedFilePath = selectedFile.getPath();
+		initLaunchpad();
 		MusicPlayer.getInstance().go(selectedFilePath);
 	}
 	
@@ -200,15 +204,22 @@ public class RootController implements Initializable {
 	public void handleComboTrack() {
 		MusicPlayer.getInstance().stop();
 		if (comboTrack.getValue() != null) {
-			for (Rectangle pad : launchpad) {
-				pad.setFill(Color.WHITE);
-			}
+			initLaunchpad();
 //			System.out.println("combo : " + comboTrack.getValue());
 			MusicPlayer.getInstance().setTrack(comboTrack.getValue());
 		}
 	}
 	
-	public ComboBox<Integer> getComboTrack() {
+	public void initLaunchpad() {
+		for (Rectangle pad : launchpad) {
+			pad.setStroke(Color.LIGHTGRAY);
+			pad.setWidth(PAD_WIDTH);
+			pad.setHeight(PAD_HEIGHT);
+			pad.setFill(Color.WHITE);
+		}
+	}
+	
+	public ComboBox<String> getComboTrack() {
 		return comboTrack;
 	}
 	

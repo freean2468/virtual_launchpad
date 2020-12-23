@@ -8,10 +8,15 @@ import java.util.TreeMap;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 
 import javax.sound.midi.*;
 
 public class MusicPlayer implements ControllerEventListener{
+	//https://mido.readthedocs.io/en/latest/meta_message_types.html
+	public static final int TRACK_NAME = 0x03;
+	
 	public static final int NOTE_ON_EVENT = 126;
 	public static final int NOTE_OFF_EVENT = 127;
 	public static final int NOTE_ON = 0x90;
@@ -24,7 +29,7 @@ public class MusicPlayer implements ControllerEventListener{
 	private Sequencer sequencer;
 	private int trackNumber = 0;
 	private int trackNumberToShow = 0;
-	private int firstKeyIndex; 
+	private String trackName;
 	private File midFile = null;
 	
 	private MusicPlayer() {
@@ -52,8 +57,10 @@ public class MusicPlayer implements ControllerEventListener{
 	@Override
 	public void controlChange(ShortMessage event) {
 //		System.out.println("data1 : " + event.getData1() + " data2 : " + event.getData2());
+		int key = event.getData2();
+		Rectangle pad = Main.rootController.getLaunchpad().get(key);
+		
 		if (event.getData1() == NOTE_ON_EVENT) {
-			int key = event.getData2();
 			int remain = key/NOTE_NAMES.length;
 			Color color;
 			switch (remain) {
@@ -61,7 +68,7 @@ public class MusicPlayer implements ControllerEventListener{
 				color = Color.PURPLE;
 				break;
 			case 1:
-				color = Color.AQUAMARINE;
+				color = Color.BLUE;
 				break;
 			case 2:
 				color = Color.TURQUOISE;
@@ -82,10 +89,16 @@ public class MusicPlayer implements ControllerEventListener{
 				color = Color.GOLDENROD;
 				break;
 			}
-			Main.rootController.getLaunchpad().get(key).setFill(color);
+			pad.setFill(color);
+			pad.setWidth(RootController.PAD_WIDTH+15);
+			pad.setHeight(RootController.PAD_HEIGHT+15);
+			pad.setStroke(Color.BLACK);
 		}
 		else if (event.getData1() == NOTE_OFF_EVENT) {
-			Main.rootController.getLaunchpad().get(event.getData2()).setFill(Color.WHITE);
+			pad.setFill(Color.WHITE);
+			pad.setWidth(RootController.PAD_WIDTH);
+			pad.setHeight(RootController.PAD_HEIGHT);
+			pad.setStroke(Color.LIGHTGRAY);
 		}
 	}
 	
@@ -133,8 +146,8 @@ public class MusicPlayer implements ControllerEventListener{
 		return singleton;
 	}
 	
-	public void setTrack(int track) {
-		trackNumberToShow = track;
+	public void setTrack(String trackName) {
+		trackNumberToShow = Integer.parseInt((trackName.length() > 1) ? trackName.split("-")[0] : trackName);
 		setSequence();
 	}
 	
@@ -161,31 +174,41 @@ public class MusicPlayer implements ControllerEventListener{
 	    	    }
 	    	});
 			 
-	        ObservableList<Integer> comboItems = FXCollections.observableArrayList();
+	        ObservableList<String> comboItems = FXCollections.observableArrayList();
 	        
 	        trackNumber = 0;
 	        
-			// find out a key range.
+			// find out a key range and track information
 			for (Track track : seq.getTracks()) {
-				if (++trackNumber == trackNumberToShow) {
-					for (int i = 0; i < track.size(); i++) {
-						MidiEvent event = track.get(i);
-						MidiMessage message = event.getMessage();
-						
-						if (message instanceof ShortMessage) {
-							ShortMessage sm = (ShortMessage) message;
-							if (sm.getCommand() == NOTE_ON) {
-								int key = sm.getData1();
-								int note = key % OCTAVE;
-								String noteName = NOTE_NAMES[note];
+				++trackNumber;
+				String trackName = null;
+				for (int i = 0; i < track.size(); i++) {
+					MidiEvent event = track.get(i);
+					MidiMessage message = event.getMessage();
+					
+					if (message instanceof ShortMessage) {
+						ShortMessage sm = (ShortMessage) message;
+						if (sm.getCommand() == NOTE_ON) {
+							int key = sm.getData1();
+							int note = key % OCTAVE;
+							String noteName = NOTE_NAMES[note];
+
+							if (trackNumber == trackNumberToShow) {
 								if (!keyRange.containsKey(key)) {
 									keyRange.put(key, noteName);
 								}
 							}
 						}
+					} else if (message instanceof MetaMessage) {
+						MetaMessage mm = (MetaMessage) message;
+						if (mm.getType() == TRACK_NAME) {
+							System.out.println("meta message : " + new String(mm.getData()));
+							trackName = "-" + new String(mm.getData());
+			            }
 					}
 				}
-				comboItems.add(trackNumber);
+				
+				comboItems.add((trackName != null) ? trackNumber+trackName : String.valueOf(trackNumber));
 			}
 			
 			// track수를 Javafx combobox로 전달
@@ -225,7 +248,7 @@ public class MusicPlayer implements ControllerEventListener{
 	//						System.out.print("Channel: " + channel + " ");
 							if (sm.getCommand() == NOTE_ON) {
 								// bests : 9, 14, 114, 121
-								track.add(makeEvent(ShortMessage.PROGRAM_CHANGE, 0, 9, 0, tick));
+//								track.add(makeEvent(ShortMessage.PROGRAM_CHANGE, 0, 9, 0, tick));
 								int key = sm.getData1();
 								int octave = (key / OCTAVE) - 1;
 								int note = key % OCTAVE;
@@ -243,10 +266,11 @@ public class MusicPlayer implements ControllerEventListener{
 								int velocity = sm.getData2();
 	//							System.out.println("Note off, " + noteName + octave + " key=" + key + " velocity: " + velocity);
 							} else {
-	//							System.out.println("command: " + sm.getCommand());
+//								System.out.println("command: " + sm.getCommand());
 							}
-						} else {
-	//						System.out.println("Other message: " + message.getClass());
+						} 
+						else {
+//							System.out.println("Other message: " + message.getClass());
 						}
 					}
 				}
