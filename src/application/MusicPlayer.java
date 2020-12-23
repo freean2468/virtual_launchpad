@@ -29,7 +29,8 @@ public class MusicPlayer implements ControllerEventListener{
 	private Sequencer sequencer;
 	private int trackNumber = 0;
 	private int trackNumberToShow = 0;
-	private String trackName;
+	private TreeMap<Integer, String> keyRange = null;
+	private int firstKeyIndex = 0;
 	private File midFile = null;
 	
 	private MusicPlayer() {
@@ -58,36 +59,25 @@ public class MusicPlayer implements ControllerEventListener{
 	public void controlChange(ShortMessage event) {
 //		System.out.println("data1 : " + event.getData1() + " data2 : " + event.getData2());
 		int key = event.getData2();
-		Rectangle pad = Main.rootController.getLaunchpad().get(key);
+		int padIndex = key - keyRange.firstKey() + firstKeyIndex;
+		Rectangle pad = Main.rootController.getLaunchpad().get(padIndex);
 		
 		if (event.getData1() == NOTE_ON_EVENT) {
-			int remain = key/NOTE_NAMES.length;
+			int octave = key/NOTE_NAMES.length;
 			Color color;
-			switch (remain) {
-			case 0:
-				color = Color.PURPLE;
-				break;
-			case 1:
-				color = Color.BLUE;
-				break;
-			case 2:
-				color = Color.TURQUOISE;
-				break;
-			case 3:
-				color = Color.CORAL;
-				break;
-			case 4:
-				color = Color.LIGHTCORAL;
-				break;
-			case 5:
-				color = Color.HONEYDEW;
-				break;
-			case 6:
-				color = Color.LIGHTCORAL;
-				break;
-			default:
-				color = Color.GOLDENROD;
-				break;
+			switch (octave) {
+			case 0: color = Color.BLACK; 			break;
+			case 1: color = Color.DARKRED; 			break;
+			case 2: color = Color.PURPLE;	 		break;
+			case 3: color = Color.BLUE; 			break;
+			case 4: color = Color.STEELBLUE; 		break;
+			case 5: color = Color.TURQUOISE; 		break;
+			case 6: color = Color.GOLD;		 		break;
+			case 7: color = Color.CORAL;			break;
+			case 8: color = Color.MISTYROSE;		break;
+			case 9: color = Color.OLDLACE;			break;
+			case 10:color = Color.LAVENDERBLUSH; 	break;
+			default: color = Color.WHITE; 			break;
 			}
 			pad.setFill(color);
 			pad.setWidth(RootController.PAD_WIDTH+15);
@@ -158,7 +148,7 @@ public class MusicPlayer implements ControllerEventListener{
 			// controller에 전달할 이벤트를 담을 전용 트랙 
 			Track trackForController = seq.createTrack();
 			
-			TreeMap<Integer, String> keyRange = new TreeMap<Integer, String>(new Comparator<Integer>() {
+			keyRange = new TreeMap<Integer, String>(new Comparator<Integer>() {
 	    	    // Note: this comparator imposes orderings that are inconsistent with
 	    	    // equals.
 	    		@Override
@@ -219,7 +209,7 @@ public class MusicPlayer implements ControllerEventListener{
 			
 			Map.Entry<Integer, String> firstEntry = keyRange.firstEntry();
 			
-			int firstKeyIndex = findFirstKeyIndex((firstEntry != null) ? firstEntry.getValue() : "C");
+			firstKeyIndex = findFirstKeyIndex((firstEntry != null) ? firstEntry.getValue() : "C");
 			
 			// 한 런치패드로 7옥타브 + 2키까지 표현 가능
 			if (keyRange.size() > 0)
@@ -256,8 +246,8 @@ public class MusicPlayer implements ControllerEventListener{
 								int velocity = sm.getData2();
 	//							System.out.println("Note on, " + noteName + octave + " key=" + key + " velocity: " + velocity);
 								
-								trackForController.add(makeEvent(176, channel, NOTE_ON_EVENT, key-keyRange.firstKey()+firstKeyIndex, tick));
-								trackForController.add(makeEvent(176, channel, NOTE_OFF_EVENT, key-keyRange.firstKey()+firstKeyIndex, tick+(velocity*100)));
+								trackForController.add(makeEvent(176, channel, NOTE_ON_EVENT, key, tick));
+								trackForController.add(makeEvent(176, channel, NOTE_OFF_EVENT, key, tick+(velocity*100)));
 							} else if (sm.getCommand() == NOTE_OFF) {
 								int key = sm.getData1();
 								int octave = (key / 12) - 1;

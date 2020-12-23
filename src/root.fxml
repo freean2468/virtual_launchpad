@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Rectangle?>
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="960.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.RootController">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="960.0" prefWidth="890.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.RootController">
    <children>
       <MenuBar>
         <menus>
@@ -27,7 +27,7 @@
             <ComboBox fx:id="comboTrack" onAction="#handleComboTrack" prefWidth="150.0" promptText="트랙 선택" />
          </items>
       </ToolBar>
-      <TilePane hgap="10.0" prefColumns="8" prefHeight="910.0" prefRows="8" prefTileHeight="100.0" prefTileWidth="100.0" prefWidth="900.0" vgap="10.0">
+      <TilePane hgap="10.0" prefColumns="8" prefHeight="890.0" prefRows="8" prefTileHeight="100.0" prefTileWidth="100.0" prefWidth="890.0" vgap="10.0">
          <children>
             <Rectangle fx:id="btn57" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="80.0" onMouseClicked="#handleBtn11Action" stroke="#e8e8e8" strokeType="OUTSIDE" strokeWidth="10.0" width="80.0">
                <TilePane.margin>
