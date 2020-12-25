@@ -21,6 +21,10 @@
               <MenuItem mnemonicParsing="false" onAction="#handleClose" text="Close" />
             </items>
           </Menu>
+            <Menu fx:id="menuTrack" mnemonicParsing="false" text="Tracks" >
+            	<items>
+            	</items>
+            </Menu>
         </menus>
       </MenuBar>
       <ToolBar prefHeight="40.0" prefWidth="200.0">

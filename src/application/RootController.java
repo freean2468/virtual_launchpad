@@ -12,10 +12,11 @@ import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.scene.control.Menu;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Control;
-import javafx.scene.control.MenuBar;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Background;
@@ -37,7 +38,8 @@ public class RootController implements Initializable {
 	
 	/*
 	 * Vbox(root) 
-	 * 	- MenuBar(menu)
+	 * 	- MenuBar
+	 * 		- Menu(menuTrack)
 	 *  - ToolBar
 	 *  	- ComboBox(comboTrack)
 	 *  	- Button(btnPlayOnOff)
@@ -48,7 +50,7 @@ public class RootController implements Initializable {
 	 */
 	
 	@FXML private VBox root;
-	@FXML private MenuBar menu;
+	@FXML private Menu menuTrack;
 	@FXML private ComboBox<String> comboTrack;
 	@FXML private TilePane mainPane;
 	
@@ -96,7 +98,16 @@ public class RootController implements Initializable {
 			}
 			
 			public int getPadIndex(int key) {
-				return key - keyRange.firstKey() + firstKeyIndex;
+				int padIndex = key - keyRange.firstKey() + firstKeyIndex;
+				for (int i = 0; i < 8; ++i) {
+					for (int j = 0; j < 8; ++j) {
+						if (padIndex == i*8+j) {
+							return (7-i)*8+j;
+						}
+					}
+				}
+				// never have to reach here
+				return -1;
 			}
 		}
 		
@@ -123,9 +134,6 @@ public class RootController implements Initializable {
 			
 			this.container = new TilePane();
 			this.key = new Key(keyRange);
-			/*<TilePane.margin>
-	            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-	         </TilePane.margin>*/
 			
 			resize(length);
 		}
@@ -135,24 +143,24 @@ public class RootController implements Initializable {
 		}
 		
 		public void resize(double length) {
-			double margin = length/40;
-			double lengthWithPadding = Math.floor(length-length*0.1-margin*2);
-			padLength = lengthWithPadding / 8;
+			double margin = length/40.0;
+			double gap = length/60.0;
+			double lengthWithPadding = Math.floor(length-length*0.1-margin*2-gap*7);
+			padLength = lengthWithPadding / 8.0;
 			
 			for (Rectangle pad : pads) {
 				pad.setHeight(padLength);
 				pad.setWidth(padLength);
-				pad.setStrokeWidth(padLength/20);
+				pad.setStrokeWidth(padLength/16.0);
 			}
 			
-			double gap = padLength/9;
 			TilePane.setMargin(this.container, new Insets(margin, margin,margin,margin));
 			this.container.setHgap(gap);
 			this.container.setVgap(gap);
 			this.container.setPrefWidth(length);
 			this.container.setPrefHeight(length);
-			this.container.setPrefTileWidth(lengthWithPadding/8);
-			this.container.setPrefTileHeight(lengthWithPadding/8);
+			this.container.setPrefTileWidth(lengthWithPadding/8.0);
+			this.container.setPrefTileHeight(lengthWithPadding/8.0);
 			this.container.getChildren().clear();
 			this.container.getChildren().addAll(pads);
 		}
@@ -179,7 +187,7 @@ public class RootController implements Initializable {
 			}
 			pad.setFill(color);
 			
-			double length = padLength+padLength*0.1;
+			double length = padLength+padLength*0.15;
 			pad.setWidth(length);
 			pad.setHeight(length);
 			pad.setStroke(Color.BLACK);
@@ -199,7 +207,7 @@ public class RootController implements Initializable {
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		System.out.println("initialized!");
+//		System.out.println("initialized!");
 		
 		mainPane.setBackground(new Background(new BackgroundFill(Color.web("#000000"), CornerRadii.EMPTY, Insets.EMPTY)));
 		
@@ -238,8 +246,11 @@ public class RootController implements Initializable {
 		fileChooser.getExtensionFilters().add(new ExtensionFilter("Midi Files", "*.mid"));
 		fileChooser.setTitle("Open Midi File");
 		File selectedFile = fileChooser.showOpenDialog(Main.stage);
-		String selectedFilePath = selectedFile.getPath();
-		MusicPlayer.getInstance().go(selectedFilePath);
+		if (selectedFile != null) {
+			String selectedFilePath = selectedFile.getPath();
+			menuTrack.getItems().clear();
+			MusicPlayer.getInstance().go(selectedFilePath);
+		}
 	}
 	
 	@FXML
@@ -258,6 +269,22 @@ public class RootController implements Initializable {
 	
 	public TilePane getMainPane() {
 		return mainPane;
+	}
+	
+	public void addTrackIntoMenuBar(String trackName) {
+		CheckMenuItem item = new CheckMenuItem(trackName);
+		item.setSelected(true);
+		item.selectedProperty().addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> Observable, Boolean oldValue, Boolean newValue) {
+				int idx = menuTrack.getItems().indexOf(item);
+				if (newValue == false) {
+					menuTrack.getItems().remove(idx);
+					mainPane.getChildren().remove(idx);
+				}
+			}
+		});
+		menuTrack.getItems().add(item);
 	}
 	
 	public ArrayList<Launchpad> getLaunchpads() {

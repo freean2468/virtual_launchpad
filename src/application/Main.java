@@ -19,12 +19,12 @@ public class Main extends Application {
 	
 	@Override
 	public void init() {
-		System.out.println("Application:init()");
+//		System.out.println("Application:init()");
 	}
 	
 	@Override
 	public void start(Stage primaryStage) {
-		System.out.println("Application:start()");
+//		System.out.println("Application:start()");
 		try {
 			FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("../root.fxml"));
 			Parent root = fxmlLoader.load();
