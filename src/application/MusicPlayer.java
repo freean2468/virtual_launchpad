@@ -60,7 +60,8 @@ public class MusicPlayer implements ControllerEventListener{
 //		System.out.println("data1 : " + event.getData1() + " data2 : " + event.getData2());
 		int key = event.getData2();
 		int padIndex = key - keyRange.firstKey() + firstKeyIndex;
-		Rectangle pad = Main.rootController.getLaunchpad().get(padIndex);
+//		Rectangle pad = Main.rootController.getLaunchpads().get(padIndex);
+		Rectangle pad = new Rectangle();
 		
 		if (event.getData1() == NOTE_ON_EVENT) {
 			int octave = key/NOTE_NAMES.length;
@@ -124,8 +125,11 @@ public class MusicPlayer implements ControllerEventListener{
 		return -1;
 	}
 	
-	public void stop() {
-		sequencer.stop();
+	public void onOff() {
+		if (sequencer.isRunning())
+			sequencer.stop();
+		else
+			sequencer.start();
 	}
 	
 	public void closeSequencer() {
@@ -167,11 +171,11 @@ public class MusicPlayer implements ControllerEventListener{
 	        ObservableList<String> comboItems = FXCollections.observableArrayList();
 	        
 	        trackNumber = 0;
+			String trackName = null;
 	        
 			// find out a key range and track information
 			for (Track track : seq.getTracks()) {
 				++trackNumber;
-				String trackName = null;
 				for (int i = 0; i < track.size(); i++) {
 					MidiEvent event = track.get(i);
 					MidiMessage message = event.getMessage();
@@ -203,6 +207,12 @@ public class MusicPlayer implements ControllerEventListener{
 			
 			// track수를 Javafx combobox로 전달
 			Main.rootController.getComboTrack().setItems(comboItems);
+			
+			// track수만큼 launchpad를 생성하려면 mainPane부터 설정
+			int row = 1;	// 고정 
+			int column = (trackNumber+1)/2;
+			
+			Main.rootController.initMainPane(row, column, trackNumber, trackName);
 			
 			System.out.println("총 키 갯수 : " + keyRange.size());
 			System.out.println(keyRange);

@@ -19,11 +19,12 @@ public class Main extends Application {
 	
 	@Override
 	public void init() {
-		
+		System.out.println("Application:init()");
 	}
 	
 	@Override
 	public void start(Stage primaryStage) {
+		System.out.println("Application:start()");
 		try {
 			FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("../root.fxml"));
 			Parent root = fxmlLoader.load();
@@ -33,8 +34,9 @@ public class Main extends Application {
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 			stage = primaryStage;
 			stage.setScene(scene);
-			stage.setResizable(false);
+			stage.setMaximized(true);
 			stage.show();
+			stage.setResizable(true);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}

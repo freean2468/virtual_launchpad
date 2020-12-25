@@ -5,183 +5,145 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Control;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.TilePane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.StrokeType;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
-// can't declare as a singleton
+// can't be declared as a singleton
 public class RootController implements Initializable {
+	public static final int PADS = 64;
 	public static final int PAD_WIDTH = 80;
 	public static final int PAD_HEIGHT = 80;
 	
-	@FXML private Rectangle btn1;
-	@FXML private Rectangle btn2;
-	@FXML private Rectangle btn3;
-	@FXML private Rectangle btn4;
-	@FXML private Rectangle btn5;
-	@FXML private Rectangle btn6;
-	@FXML private Rectangle btn7;
-	@FXML private Rectangle btn8;
-	@FXML private Rectangle btn9;
-	@FXML private Rectangle btn10;
-	@FXML private Rectangle btn11;
-	@FXML private Rectangle btn12;
-	@FXML private Rectangle btn13;
-	@FXML private Rectangle btn14;
-	@FXML private Rectangle btn15;
-	@FXML private Rectangle btn16;
-	@FXML private Rectangle btn17;
-	@FXML private Rectangle btn18;
-	@FXML private Rectangle btn19;
-	@FXML private Rectangle btn20;
-	@FXML private Rectangle btn21;
-	@FXML private Rectangle btn22;
-	@FXML private Rectangle btn23;
-	@FXML private Rectangle btn24;
-	@FXML private Rectangle btn25;
-	@FXML private Rectangle btn26;
-	@FXML private Rectangle btn27;
-	@FXML private Rectangle btn28;
-	@FXML private Rectangle btn29;
-	@FXML private Rectangle btn30;
-	@FXML private Rectangle btn31;
-	@FXML private Rectangle btn32;
-	@FXML private Rectangle btn33;
-	@FXML private Rectangle btn34;
-	@FXML private Rectangle btn35;
-	@FXML private Rectangle btn36;
-	@FXML private Rectangle btn37;
-	@FXML private Rectangle btn38;
-	@FXML private Rectangle btn39;
-	@FXML private Rectangle btn40;
-	@FXML private Rectangle btn41;
-	@FXML private Rectangle btn42;
-	@FXML private Rectangle btn43;
-	@FXML private Rectangle btn44;
-	@FXML private Rectangle btn45;
-	@FXML private Rectangle btn46;
-	@FXML private Rectangle btn47;
-	@FXML private Rectangle btn48;
-	@FXML private Rectangle btn49;
-	@FXML private Rectangle btn50;
-	@FXML private Rectangle btn51;
-	@FXML private Rectangle btn52;
-	@FXML private Rectangle btn53;
-	@FXML private Rectangle btn54;
-	@FXML private Rectangle btn55;
-	@FXML private Rectangle btn56;
-	@FXML private Rectangle btn57;
-	@FXML private Rectangle btn58;
-	@FXML private Rectangle btn59;
-	@FXML private Rectangle btn60;
-	@FXML private Rectangle btn61;
-	@FXML private Rectangle btn62;
-	@FXML private Rectangle btn63;
-	@FXML private Rectangle btn64;
-	
+	@FXML private VBox root;
+	@FXML private MenuBar menu;
 	@FXML private ComboBox<String> comboTrack;
+	@FXML private TilePane mainPane;
 	
-	private ArrayList<Rectangle> launchpad = new ArrayList<Rectangle>();
+	@FXML private Button btnPlayOnOff;
+	@FXML private Slider sliderLaunchpadSize;
+	
+	public class Launchpad {
+		private TilePane container;
+		private ArrayList<Rectangle> pads;
+		private TextField trackName;
+		
+		Launchpad(String trackName, double length) {
+			this.trackName = new TextField();
+			this.trackName.setText(trackName);
+			
+			this.pads = new ArrayList<Rectangle>();
+			
+			length = Math.floor(length);
+			
+			for (int i = 0 ; i < PADS; ++i) {
+				Rectangle pad = new Rectangle();
+				pad.setArcHeight(5.0);
+				pad.setArcWidth(5.0);
+				pad.setFill(Color.WHITE);
+				pad.setStroke(Color.LIGHTGRAY);
+				pad.setStrokeType(StrokeType.OUTSIDE);
+				this.pads.add(pad);
+			}
+			
+			this.container = new TilePane();
+			/*<TilePane.margin>
+	            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+	         </TilePane.margin>*/
+			
+			resize(length);
+		}
+		
+		public void init() {
+			for (Rectangle pad : pads) {
+				pad.setStroke(Color.LIGHTGRAY);
+				pad.setWidth(PAD_WIDTH);
+				pad.setHeight(PAD_HEIGHT);
+				pad.setFill(Color.WHITE);
+			}
+		}
+		
+		public TilePane getContainer() {
+			return container;
+		}
+		
+		public void resize(double length) {
+			double margin = length/40;
+			double lengthWithPadding = Math.floor(length-length*0.1-margin*2);
+			double padLength = lengthWithPadding / 8;
+			
+			for (Rectangle pad : pads) {
+				pad.setHeight(padLength);
+				pad.setWidth(padLength);
+				pad.setStrokeWidth(padLength/20);
+			}
+			
+			double gap = padLength/9;
+			TilePane.setMargin(this.container, new Insets(margin, margin,margin,margin));
+			this.container.setHgap(gap);
+			this.container.setVgap(gap);
+			this.container.setPrefWidth(length);
+			this.container.setPrefHeight(length);
+			this.container.setPrefTileWidth(lengthWithPadding/8);
+			this.container.setPrefTileHeight(lengthWithPadding/8);
+			this.container.getChildren().clear();
+			this.container.getChildren().addAll(pads);
+		}
+	}
+	
+	ArrayList<Launchpad> launchpads;
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		System.out.println("initialized!");
 		
-		launchpad.add(btn1);
-		launchpad.add(btn2);
-		launchpad.add(btn3);
-		launchpad.add(btn4);
-		launchpad.add(btn5);
-		launchpad.add(btn6);
-		launchpad.add(btn7);
-		launchpad.add(btn8);
-		launchpad.add(btn9);
-		launchpad.add(btn10);
-		launchpad.add(btn11);
-		launchpad.add(btn12);
-		launchpad.add(btn13);
-		launchpad.add(btn14);
-		launchpad.add(btn15);
-		launchpad.add(btn16);
-		launchpad.add(btn17);
-		launchpad.add(btn18);
-		launchpad.add(btn19);
-		launchpad.add(btn20);
-		launchpad.add(btn21);
-		launchpad.add(btn22);
-		launchpad.add(btn23);
-		launchpad.add(btn24);
-		launchpad.add(btn25);
-		launchpad.add(btn26);
-		launchpad.add(btn27);
-		launchpad.add(btn28);
-		launchpad.add(btn29);
-		launchpad.add(btn30);
-		launchpad.add(btn31);
-		launchpad.add(btn32);
-		launchpad.add(btn33);
-		launchpad.add(btn34);
-		launchpad.add(btn35);
-		launchpad.add(btn36);
-		launchpad.add(btn37);
-		launchpad.add(btn38);
-		launchpad.add(btn39);
-		launchpad.add(btn40);
-		launchpad.add(btn41);
-		launchpad.add(btn42);
-		launchpad.add(btn43);
-		launchpad.add(btn44);
-		launchpad.add(btn45);
-		launchpad.add(btn46);
-		launchpad.add(btn47);
-		launchpad.add(btn48);
-		launchpad.add(btn49);
-		launchpad.add(btn50);
-		launchpad.add(btn51);
-		launchpad.add(btn52);
-		launchpad.add(btn53);
-		launchpad.add(btn54);
-		launchpad.add(btn55);
-		launchpad.add(btn56);
-		launchpad.add(btn57);
-		launchpad.add(btn58);
-		launchpad.add(btn59);
-		launchpad.add(btn60);
-		launchpad.add(btn61);
-		launchpad.add(btn62);
-		launchpad.add(btn63);
-		launchpad.add(btn64);
+		mainPane.setBackground(new Background(new BackgroundFill(Color.web("#000000"), CornerRadii.EMPTY, Insets.EMPTY)));
 		
-		// setOnActions Directly on the programming.
-//		btn11.setOnAction(new EventHandler<ActionEvent>() {
-//			@Override
-//			public void handle(ActionEvent event) {
-//				handleBtn11Action(event);
-//			}
-//		});
-//		
-//		btn12.setOnAction(event->handleBtn12Action(event));
-//		btn13.setOnAction(event->handleBtn13Action(event));
+		sliderLaunchpadSize.valueProperty().addListener(new ChangeListener<Number>() {
+			@Override
+			public void changed(ObservableValue<? extends Number> Observable, Number oldValue, Number newValue) {
+				mainPane.setPrefTileWidth(newValue.doubleValue());
+				mainPane.setPrefTileHeight(newValue.doubleValue());
+				for (Launchpad launchpad : launchpads) {
+					launchpad.resize(newValue.doubleValue());
+				}
+			}
+		});
 	}
 	
-	@FXML
-	public void handleBtn11Action() {
-//		System.out.println("버튼11 클릭");
-		btn1.setFill(Color.RED);
-	}
-	
-	@FXML
-	public void handleBtn12Action() {
-//		System.out.println("버튼12 클릭");
-	}
-	
-	@FXML
-	public void handleBtn13Action() {
-//		System.out.println("버튼13 클릭");
+	public void initMainPane(int row, int column, int trackNumber, String trackName) {
+		mainPane.getChildren().clear();
+		root.setPrefSize(Control.BASELINE_OFFSET_SAME_AS_HEIGHT, Control.BASELINE_OFFSET_SAME_AS_HEIGHT);
+		mainPane.setPrefSize(root.getWidth(), root.getHeight());
+		double prefTileSize = mainPane.getPrefWidth()/column; 
+		mainPane.setPrefTileWidth(prefTileSize);
+		mainPane.setPrefTileHeight(prefTileSize);
+		
+		launchpads = new ArrayList<Launchpad>();
+		
+		for (int i = 0; i < trackNumber; ++i) {
+			Launchpad launchpad = new Launchpad(trackName, mainPane.getPrefTileWidth());
+			launchpads.add(launchpad);
+			mainPane.getChildren().add(launchpad.getContainer());
+		}
 	}
 	
 	@FXML
@@ -191,7 +153,6 @@ public class RootController implements Initializable {
 		fileChooser.setTitle("Open Midi File");
 		File selectedFile = fileChooser.showOpenDialog(Main.stage);
 		String selectedFilePath = selectedFile.getPath();
-		initLaunchpad();
 		MusicPlayer.getInstance().go(selectedFilePath);
 	}
 	
@@ -202,28 +163,28 @@ public class RootController implements Initializable {
 	
 	@FXML
 	public void handleComboTrack() {
-		MusicPlayer.getInstance().stop();
+		MusicPlayer.getInstance().onOff();
 		if (comboTrack.getValue() != null) {
-			initLaunchpad();
+//			initLaunchpad();
 //			System.out.println("combo : " + comboTrack.getValue());
 			MusicPlayer.getInstance().setTrack(comboTrack.getValue());
 		}
 	}
 	
-	public void initLaunchpad() {
-		for (Rectangle pad : launchpad) {
-			pad.setStroke(Color.LIGHTGRAY);
-			pad.setWidth(PAD_WIDTH);
-			pad.setHeight(PAD_HEIGHT);
-			pad.setFill(Color.WHITE);
-		}
+	@FXML
+	public void btnPlayOnOffAction() {
+		MusicPlayer.getInstance().onOff();
 	}
 	
 	public ComboBox<String> getComboTrack() {
 		return comboTrack;
 	}
 	
-	public ArrayList<Rectangle> getLaunchpad() {
-		return launchpad;
+	public TilePane getMainPane() {
+		return mainPane;
+	}
+	
+	public ArrayList<Launchpad> getLaunchpads() {
+		return launchpads;
 	}
 }
