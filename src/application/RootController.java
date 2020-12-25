@@ -3,7 +3,9 @@ package application;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.TreeMap;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -33,6 +35,18 @@ public class RootController implements Initializable {
 	public static final int PAD_WIDTH = 80;
 	public static final int PAD_HEIGHT = 80;
 	
+	/*
+	 * Vbox(root) 
+	 * 	- MenuBar(menu)
+	 *  - ToolBar
+	 *  	- ComboBox(comboTrack)
+	 *  	- Button(btnPlayOnOff)
+	 *  	- Slider(sliderLaunchpadSize)
+	 *  - TilePane(mainPane)
+	 *  	- TilePane(container in Launchpad)
+	 *  		- Rectangle(pad in pads in Launchpad)
+	 */
+	
 	@FXML private VBox root;
 	@FXML private MenuBar menu;
 	@FXML private ComboBox<String> comboTrack;
@@ -45,8 +59,51 @@ public class RootController implements Initializable {
 		private TilePane container;
 		private ArrayList<Rectangle> pads;
 		private TextField trackName;
+		private double padLength;
 		
-		Launchpad(String trackName, double length) {
+		public class Key {
+			private TreeMap<Integer, String> keyRange;
+			private int firstKeyIndex;
+			
+			public Key(TreeMap<Integer, String> keyRange) {
+				this.keyRange = keyRange;
+				Map.Entry<Integer, String> firstEntry = keyRange.firstEntry();
+				this.firstKeyIndex = findFirstKeyIndex((firstEntry != null) ? firstEntry.getValue() : "C");
+//				System.out.println("총 키 갯수 : " + keyRange.size());
+//				System.out.println(keyRange);
+				
+				// 한 런치패드로 7옥타브 + 2키까지 표현 가능
+				if (keyRange.size() > 0)
+					if ((keyRange.lastKey() - keyRange.firstKey())/MusicPlayer.NOTE_NAMES.length > 7) {
+						System.out.println("Keys are out of range!");
+					}
+			}
+			
+			public int findFirstKeyIndex(String key) {
+				for (int i = 0; i < MusicPlayer.NOTE_NAMES.length; ++i) {
+					if (MusicPlayer.NOTE_NAMES[i].equals(key))
+						return i;
+				}
+				return -1;
+			}
+			
+			public TreeMap<Integer, String> getKeyRange() {
+				return keyRange;
+			}
+			
+			public int getFirstKeyIndex() {
+				return firstKeyIndex;
+			}
+			
+			public int getPadIndex(int key) {
+				return key - keyRange.firstKey() + firstKeyIndex;
+			}
+		}
+		
+		private Key key;
+		
+		
+		public Launchpad(String trackName, double length, TreeMap<Integer, String> keyRange) {
 			this.trackName = new TextField();
 			this.trackName.setText(trackName);
 			
@@ -65,20 +122,12 @@ public class RootController implements Initializable {
 			}
 			
 			this.container = new TilePane();
+			this.key = new Key(keyRange);
 			/*<TilePane.margin>
 	            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
 	         </TilePane.margin>*/
 			
 			resize(length);
-		}
-		
-		public void init() {
-			for (Rectangle pad : pads) {
-				pad.setStroke(Color.LIGHTGRAY);
-				pad.setWidth(PAD_WIDTH);
-				pad.setHeight(PAD_HEIGHT);
-				pad.setFill(Color.WHITE);
-			}
 		}
 		
 		public TilePane getContainer() {
@@ -88,7 +137,7 @@ public class RootController implements Initializable {
 		public void resize(double length) {
 			double margin = length/40;
 			double lengthWithPadding = Math.floor(length-length*0.1-margin*2);
-			double padLength = lengthWithPadding / 8;
+			padLength = lengthWithPadding / 8;
 			
 			for (Rectangle pad : pads) {
 				pad.setHeight(padLength);
@@ -106,6 +155,43 @@ public class RootController implements Initializable {
 			this.container.setPrefTileHeight(lengthWithPadding/8);
 			this.container.getChildren().clear();
 			this.container.getChildren().addAll(pads);
+		}
+		
+		public void padOn(int key) {
+			int padIndex = this.key.getPadIndex(key);
+			Rectangle pad = pads.get(padIndex);
+			
+			int octave = key/MusicPlayer.NOTE_NAMES.length;
+			Color color;
+			switch (octave) {
+			case 0: color = Color.BLACK; 			break;
+			case 1: color = Color.DARKRED; 			break;
+			case 2: color = Color.PURPLE;	 		break;
+			case 3: color = Color.BLUE; 			break;
+			case 4: color = Color.STEELBLUE; 		break;
+			case 5: color = Color.TURQUOISE; 		break;
+			case 6: color = Color.GOLD;		 		break;
+			case 7: color = Color.CORAL;			break;
+			case 8: color = Color.MISTYROSE;		break;
+			case 9: color = Color.OLDLACE;			break;
+			case 10:color = Color.LAVENDERBLUSH; 	break;
+			default: color = Color.WHITE; 			break;
+			}
+			pad.setFill(color);
+			
+			double length = padLength+padLength*0.1;
+			pad.setWidth(length);
+			pad.setHeight(length);
+			pad.setStroke(Color.BLACK);
+		}
+		
+		public void padOff(int key) {
+			int padIndex = this.key.getPadIndex(key);
+			Rectangle pad = pads.get(padIndex);
+			pad.setFill(Color.WHITE);
+			pad.setWidth(padLength);
+			pad.setHeight(padLength);
+			pad.setStroke(Color.LIGHTGRAY);
 		}
 	}
 	
@@ -129,7 +215,7 @@ public class RootController implements Initializable {
 		});
 	}
 	
-	public void initMainPane(int row, int column, int trackNumber, String trackName) {
+	public void initMainPane(int row, int column, int trackNumber, String trackName, ArrayList<TreeMap<Integer, String>> keyRangeList) {
 		mainPane.getChildren().clear();
 		root.setPrefSize(Control.BASELINE_OFFSET_SAME_AS_HEIGHT, Control.BASELINE_OFFSET_SAME_AS_HEIGHT);
 		mainPane.setPrefSize(root.getWidth(), root.getHeight());
@@ -140,7 +226,7 @@ public class RootController implements Initializable {
 		launchpads = new ArrayList<Launchpad>();
 		
 		for (int i = 0; i < trackNumber; ++i) {
-			Launchpad launchpad = new Launchpad(trackName, mainPane.getPrefTileWidth());
+			Launchpad launchpad = new Launchpad(trackName, mainPane.getPrefTileWidth(), keyRangeList.get(i));
 			launchpads.add(launchpad);
 			mainPane.getChildren().add(launchpad.getContainer());
 		}
@@ -162,16 +248,6 @@ public class RootController implements Initializable {
 	}
 	
 	@FXML
-	public void handleComboTrack() {
-		MusicPlayer.getInstance().onOff();
-		if (comboTrack.getValue() != null) {
-//			initLaunchpad();
-//			System.out.println("combo : " + comboTrack.getValue());
-			MusicPlayer.getInstance().setTrack(comboTrack.getValue());
-		}
-	}
-	
-	@FXML
 	public void btnPlayOnOffAction() {
 		MusicPlayer.getInstance().onOff();
 	}
@@ -186,5 +262,12 @@ public class RootController implements Initializable {
 	
 	public ArrayList<Launchpad> getLaunchpads() {
 		return launchpads;
+	}
+	
+	public void handleKeyEvent(int eventCode, int trackNumber, int key) {
+		if (eventCode == MusicPlayer.NOTE_OFF_EVENT)
+			launchpads.get(trackNumber-1).padOff(key);
+		else if (eventCode == MusicPlayer.NOTE_ON_EVENT)
+			launchpads.get(trackNumber-1).padOn(key);
 	}
 }

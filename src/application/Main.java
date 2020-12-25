@@ -1,5 +1,5 @@
 /*
- * 프로그램 : 가상 Launchpad 
+ * 프로그램 : Midi Player visualized with launchpads.  
  * 개발자 : 송훈일
  * 개발기간 : Dec 19, 2020 ~
  * 문의 : https://www.youtube.com/channel/UC5yZGtDDMZDe3jmCDUB_rJA

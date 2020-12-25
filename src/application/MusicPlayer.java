@@ -1,6 +1,7 @@
 package application;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -28,9 +29,6 @@ public class MusicPlayer implements ControllerEventListener{
 	
 	private Sequencer sequencer;
 	private int trackNumber = 0;
-	private int trackNumberToShow = 0;
-	private TreeMap<Integer, String> keyRange = null;
-	private int firstKeyIndex = 0;
 	private File midFile = null;
 	
 	private MusicPlayer() {
@@ -58,39 +56,10 @@ public class MusicPlayer implements ControllerEventListener{
 	@Override
 	public void controlChange(ShortMessage event) {
 //		System.out.println("data1 : " + event.getData1() + " data2 : " + event.getData2());
+		int trackNumber = event.getChannel();
 		int key = event.getData2();
-		int padIndex = key - keyRange.firstKey() + firstKeyIndex;
-//		Rectangle pad = Main.rootController.getLaunchpads().get(padIndex);
-		Rectangle pad = new Rectangle();
-		
-		if (event.getData1() == NOTE_ON_EVENT) {
-			int octave = key/NOTE_NAMES.length;
-			Color color;
-			switch (octave) {
-			case 0: color = Color.BLACK; 			break;
-			case 1: color = Color.DARKRED; 			break;
-			case 2: color = Color.PURPLE;	 		break;
-			case 3: color = Color.BLUE; 			break;
-			case 4: color = Color.STEELBLUE; 		break;
-			case 5: color = Color.TURQUOISE; 		break;
-			case 6: color = Color.GOLD;		 		break;
-			case 7: color = Color.CORAL;			break;
-			case 8: color = Color.MISTYROSE;		break;
-			case 9: color = Color.OLDLACE;			break;
-			case 10:color = Color.LAVENDERBLUSH; 	break;
-			default: color = Color.WHITE; 			break;
-			}
-			pad.setFill(color);
-			pad.setWidth(RootController.PAD_WIDTH+15);
-			pad.setHeight(RootController.PAD_HEIGHT+15);
-			pad.setStroke(Color.BLACK);
-		}
-		else if (event.getData1() == NOTE_OFF_EVENT) {
-			pad.setFill(Color.WHITE);
-			pad.setWidth(RootController.PAD_WIDTH);
-			pad.setHeight(RootController.PAD_HEIGHT);
-			pad.setStroke(Color.LIGHTGRAY);
-		}
+		int eventCode = event.getData1();
+		Main.rootController.handleKeyEvent(eventCode, trackNumber, key);
 	}
 	
 	public MidiEvent makeEvent(int comd, int chan, int one, int two, long tick) {
@@ -117,14 +86,6 @@ public class MusicPlayer implements ControllerEventListener{
 		return event;
 	}
 	
-	public int findFirstKeyIndex(String key) {
-		for (int i = 0; i < NOTE_NAMES.length; ++i) {
-			if (NOTE_NAMES[i].equals(key))
-				return i;
-		}
-		return -1;
-	}
-	
 	public void onOff() {
 		if (sequencer.isRunning())
 			sequencer.stop();
@@ -140,11 +101,6 @@ public class MusicPlayer implements ControllerEventListener{
 		return singleton;
 	}
 	
-	public void setTrack(String trackName) {
-		trackNumberToShow = Integer.parseInt((trackName.length() > 1) ? trackName.split("-")[0] : trackName);
-		setSequence();
-	}
-	
 	private void setSequence() {
 		try {
 			Sequence seq = MidiSystem.getSequence(midFile);
@@ -152,30 +108,32 @@ public class MusicPlayer implements ControllerEventListener{
 			// controller에 전달할 이벤트를 담을 전용 트랙 
 			Track trackForController = seq.createTrack();
 			
-			keyRange = new TreeMap<Integer, String>(new Comparator<Integer>() {
-	    	    // Note: this comparator imposes orderings that are inconsistent with
-	    	    // equals.
-	    		@Override
-	    	    public int compare(Integer a, Integer b) {
-	    			if (a == b) {
-	    				return 0;
-	    			}
-	    			else if (a < b) {
-	    	            return -1;
-	    	        } else {
-	    	            return 1;
-	    	        } 
-	    	    }
-	    	});
+			ArrayList<TreeMap<Integer, String>> keyRangeList = new ArrayList<TreeMap<Integer, String>>();
 			 
 	        ObservableList<String> comboItems = FXCollections.observableArrayList();
 	        
 	        trackNumber = 0;
 			String trackName = null;
-	        
+			
 			// find out a key range and track information
 			for (Track track : seq.getTracks()) {
 				++trackNumber;
+				TreeMap<Integer, String> keyRange = new TreeMap<Integer, String>(new Comparator<Integer>() {
+		    	    // Note: this comparator imposes orderings that are inconsistent with
+		    	    // equals.
+		    		@Override
+		    	    public int compare(Integer a, Integer b) {
+		    			if (a == b) {
+		    				return 0;
+		    			}
+		    			else if (a < b) {
+		    	            return -1;
+		    	        } else {
+		    	            return 1;
+		    	        } 
+		    	    }
+		    	});
+				
 				for (int i = 0; i < track.size(); i++) {
 					MidiEvent event = track.get(i);
 					MidiMessage message = event.getMessage();
@@ -187,10 +145,8 @@ public class MusicPlayer implements ControllerEventListener{
 							int note = key % OCTAVE;
 							String noteName = NOTE_NAMES[note];
 
-							if (trackNumber == trackNumberToShow) {
-								if (!keyRange.containsKey(key)) {
-									keyRange.put(key, noteName);
-								}
+							if (!keyRange.containsKey(key)) {
+								keyRange.put(key, noteName);
 							}
 						}
 					} else if (message instanceof MetaMessage) {
@@ -203,6 +159,7 @@ public class MusicPlayer implements ControllerEventListener{
 				}
 				
 				comboItems.add((trackName != null) ? trackNumber+trackName : String.valueOf(trackNumber));
+				keyRangeList.add(keyRange);
 			}
 			
 			// track수를 Javafx combobox로 전달
@@ -212,20 +169,7 @@ public class MusicPlayer implements ControllerEventListener{
 			int row = 1;	// 고정 
 			int column = (trackNumber+1)/2;
 			
-			Main.rootController.initMainPane(row, column, trackNumber, trackName);
-			
-			System.out.println("총 키 갯수 : " + keyRange.size());
-			System.out.println(keyRange);
-			
-			Map.Entry<Integer, String> firstEntry = keyRange.firstEntry();
-			
-			firstKeyIndex = findFirstKeyIndex((firstEntry != null) ? firstEntry.getValue() : "C");
-			
-			// 한 런치패드로 7옥타브 + 2키까지 표현 가능
-			if (keyRange.size() > 0)
-				if ((keyRange.lastKey() - keyRange.firstKey())/NOTE_NAMES.length > 7) {
-					System.out.println("Keys are out of range!");
-				}
+			Main.rootController.initMainPane(row, column, trackNumber, trackName, keyRangeList);
 			
 			trackNumber = 0;
 			
@@ -235,43 +179,42 @@ public class MusicPlayer implements ControllerEventListener{
 				System.out.println("Track " + trackNumber + ": size = " + track.size());
 				System.out.println();
 				
-				if (trackNumber == trackNumberToShow) {
-					for (int i = 0; i < track.size(); i++) {
-						MidiEvent event = track.get(i);
-						long tick = event.getTick();
-	//					System.out.print("@" + tick + " ");
-						MidiMessage message = event.getMessage();
-						
-						if (message instanceof ShortMessage) {
-							ShortMessage sm = (ShortMessage) message;
-							int channel = sm.getChannel();
-	//						System.out.print("Channel: " + channel + " ");
-							if (sm.getCommand() == NOTE_ON) {
-								// bests : 9, 14, 114, 121
+				for (int i = 0; i < track.size(); i++) {
+					MidiEvent event = track.get(i);
+					long tick = event.getTick();
+//					System.out.print("@" + tick + " ");
+					MidiMessage message = event.getMessage();
+					
+					if (message instanceof ShortMessage) {
+						ShortMessage sm = (ShortMessage) message;
+						int channel = sm.getChannel();
+//						System.out.print("Channel: " + channel + " ");
+						if (sm.getCommand() == NOTE_ON) {
+							// bests : 9, 14, 114, 121
 //								track.add(makeEvent(ShortMessage.PROGRAM_CHANGE, 0, 9, 0, tick));
-								int key = sm.getData1();
-								int octave = (key / OCTAVE) - 1;
-								int note = key % OCTAVE;
-								String noteName = NOTE_NAMES[note];
-								int velocity = sm.getData2();
-	//							System.out.println("Note on, " + noteName + octave + " key=" + key + " velocity: " + velocity);
-								
-								trackForController.add(makeEvent(176, channel, NOTE_ON_EVENT, key, tick));
-								trackForController.add(makeEvent(176, channel, NOTE_OFF_EVENT, key, tick+(velocity*100)));
-							} else if (sm.getCommand() == NOTE_OFF) {
-								int key = sm.getData1();
-								int octave = (key / 12) - 1;
-								int note = key % 12;
-								String noteName = NOTE_NAMES[note];
-								int velocity = sm.getData2();
-	//							System.out.println("Note off, " + noteName + octave + " key=" + key + " velocity: " + velocity);
-							} else {
+							int key = sm.getData1();
+							int octave = (key / OCTAVE) - 1;
+							int note = key % OCTAVE;
+							String noteName = NOTE_NAMES[note];
+							int velocity = sm.getData2();
+//							System.out.println("Note on, " + noteName + octave + " key=" + key + " velocity: " + velocity);
+							
+							trackForController.add(makeEvent(176, trackNumber, NOTE_ON_EVENT, key, tick));
+							trackForController.add(makeEvent(176, trackNumber, NOTE_OFF_EVENT, key, tick+(velocity*100)));
+						} else if (sm.getCommand() == NOTE_OFF) {
+							int key = sm.getData1();
+							int octave = (key / 12) - 1;
+							int note = key % 12;
+							String noteName = NOTE_NAMES[note];
+							int velocity = sm.getData2();
+//							System.out.println("Note off, " + noteName + octave + " key=" + key + " velocity: " + velocity);
+							trackForController.add(makeEvent(176, trackNumber, NOTE_OFF_EVENT, key, tick));
+						} else {
 //								System.out.println("command: " + sm.getCommand());
-							}
-						} 
-						else {
-//							System.out.println("Other message: " + message.getClass());
 						}
+					} 
+					else {
+//							System.out.println("Other message: " + message.getClass());
 					}
 				}
 				

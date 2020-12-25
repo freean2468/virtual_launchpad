@@ -25,7 +25,7 @@
       </MenuBar>
       <ToolBar prefHeight="40.0" prefWidth="200.0">
          <items>
-            <ComboBox fx:id="comboTrack" onAction="#handleComboTrack" prefWidth="150.0" promptText="트랙 선택" />
+            <ComboBox fx:id="comboTrack" prefWidth="150.0" promptText="트랙 선택" />
             <Button fx:id="btnPlayOnOff" mnemonicParsing="false" onAction="#btnPlayOnOffAction" text="On/Off" />
             <Slider fx:id="sliderLaunchpadSize" max="1080.0" />
          </items>
