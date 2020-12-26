@@ -21,7 +21,7 @@
               <MenuItem mnemonicParsing="false" onAction="#handleClose" text="Close" />
             </items>
           </Menu>
-            <Menu fx:id="menuTrack" mnemonicParsing="false" text="Tracks" >
+            <Menu fx:id="menuTrack" mnemonicParsing="false" text="Tracks">
             	<items>
             	</items>
             </Menu>
@@ -31,7 +31,7 @@
          <items>
             <ComboBox fx:id="comboTrack" prefWidth="150.0" promptText="트랙 선택" />
             <Button fx:id="btnPlayOnOff" mnemonicParsing="false" onAction="#btnPlayOnOffAction" text="On/Off" />
-            <Slider fx:id="sliderLaunchpadSize" max="1080.0" />
+            <Slider fx:id="sliderLaunchpadSize" max="1650.0" />
          </items>
       </ToolBar>
       <TilePane fx:id="mainPane" prefColumns="0" prefRows="0">

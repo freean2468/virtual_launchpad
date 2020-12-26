@@ -187,7 +187,7 @@ public class RootController implements Initializable {
 			}
 			pad.setFill(color);
 			
-			double length = padLength+padLength*0.15;
+			double length = padLength+padLength*0.08;
 			pad.setWidth(length);
 			pad.setHeight(length);
 			pad.setStroke(Color.BLACK);
